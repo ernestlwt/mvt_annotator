@@ -204,8 +204,7 @@ class ImageFolderSource(VideoSource):
         return frame
 
     def get_frame_count(self) -> int:
-        return self.frame_count # FIXME: For testing
-        # return 500
+        return self.frame_count
 
     def release(self):
         pass  # No resource to release for image folders
@@ -698,13 +697,15 @@ import time
 
 class SingleVideoAnnotatorView:
 
-    def __init__(self, model: SingleVideoAnnotatorModel, update_rate_limit = 10):
+    def __init__(self, model: SingleVideoAnnotatorModel, update_rate_limit = 10, save=False):
         self.model = model
         self.model.add_observer(self)
 
         self.update_rate_limit = update_rate_limit
         self.update_interval = 0.0
         self.time_at_last_update = None
+
+        self.save = save
 
         self.viz_frame_count = 0
 
@@ -734,10 +735,15 @@ class SingleVideoAnnotatorView:
 
             frame_viz = self.draw_frame(state, frame_id)
 
-            # save the frame visualization
-            cv2.imwrite(f"viz_output/frame_{self.viz_frame_count}.png", frame_viz)
+            # resize frame viz into smaller size
+            frame_viz = cv2.resize(frame_viz, (1920, 1080))
 
-        
+            # save the frame visualization
+            if self.save:
+                cv2.imwrite(f"viz_output/frame_{self.viz_frame_count}.png", frame_viz)
+
+            
+
     def draw_frame(self, state, frame_id):
         """
         Draws the frame with annotations.
@@ -794,6 +800,9 @@ class SingleVideoAnnotatorView:
         r, g, b = int(bgr_color[2]), int(bgr_color[1]), int(bgr_color[0])
         
         return (r, g, b)
+    
+    def __del__(self):
+        cv2.destroyAllWindows()
         
 
 
@@ -1074,14 +1083,8 @@ class SingleVideoAnnotatorController:
 
 if __name__ == '__main__':
 
-    base_annotation_path = "/media/dsta_shared/datasets/fire_academy_0928/annotation"
-    base_data_path = "/media/dsta_shared/datasets/fire_academy_0928/data"
-    local_data_path = "/home/inf/Downloads/fire_academy_0928/"
-
-    processing = ("scene2", "merged")
-
-    rgb_frames_path = os.path.join(local_data_path, processing[0], "RGB_FRAMES", processing[1])
-    annotator_states_path = os.path.join(base_annotation_path, processing[0], processing[1])
+    rgb_frames_path = "/media/dsta_shared/datasets/fire_academy_1016/data/drone1/VID_EO_9_frames"
+    annotator_states_path = "/media/dsta_shared/datasets/fire_academy_1016/annotation/drone1/VID_EO_9"
 
     os.makedirs(annotator_states_path, exist_ok=True)
     
@@ -1092,24 +1095,26 @@ if __name__ == '__main__':
         video_source_path=rgb_frames_path,
         sorting_rule=lambda x: int(x.split('.')[0].split('_')[-1])
     )
-
-    view = SingleVideoAnnotatorView(model)
     controller = SingleVideoAnnotatorController(model, None)
 
-    model.load_state()
-    # print(model.get_frame_count())
-
-    # model.initialize_YOLO_detection()
+    # connect a view to the annotator model to visualize changes
+    view = SingleVideoAnnotatorView(model, save=True) 
+    
+    # model.load_state()
+    
+    model.initialize_YOLO_detection() # this line computes the detections for the entire video
     # model.save_state()
 
-    # model.initialize_SAM_tracking()
+    # model.initialize_SAM_tracking() # this one initializes SAM mask tracking for the entire video
     # model.save_state()
 
+    # the below functions are for the user to interact with the model
     # controller.user_annotation_split_pass()
     # controller.user_annotation_merge_pass()
 
     # # model.release_video()
     # model.save_state()
 
-    for i in range(model.get_frame_count()):
-        model.notify_observers(frame_id=i, changed="detections")
+    # for rendering a video of the visualizations
+    # for i in range(model.get_frame_count()):
+    #     model.notify_observers(frame_id=i, changed="detections")
