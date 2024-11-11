@@ -210,7 +210,7 @@ class ImageFolderSource(VideoSource):
         # Apply sorting rule
         # self.image_paths.sort(key=sorting_rule if sorting_rule else lambda x: x)
 
-        self.image_paths = natsorted(self.image_paths)
+        self.image_paths = sorted(self.image_paths, key=sorting_rule)
 
         self.frame_count = len(self.image_paths)
 
@@ -1055,8 +1055,11 @@ class SingleVideoAnnotatorController:
                     ax.imshow(frame)
 
                     ax.set_title(
-                        f"Frame {frame_id} | Click on 2 frames containint seg point | key binding: 'n' to skip the current segmentation, 'd' to delete current tracking"
+                        f"Frame {frame_id}"
                     )
+
+                    #set master title
+                    fig.suptitle(f"Click on 2 frames containint seg point | key binding: 'n' to skip the current segmentation, 'd' to delete current tracking")
 
                 plt.show(block=False)
                 click_handler.wait_for_clicks()
@@ -1132,6 +1135,9 @@ class SingleVideoAnnotatorController:
                 self._display_tracking_on_axs(
                     all_trackings[candidate[1]], axs[i + 1, :]
                 )
+
+            #set master title
+            fig.suptitle(f"Click on any column on the other rows that you would like to merge with the first row | key binding: 'n' to assert no merge (all candidates are different from the first one)")
 
             plt.show(block=False)
             click_handler.wait_for_clicks()
