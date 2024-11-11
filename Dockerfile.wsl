@@ -1,0 +1,24 @@
+FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel
+
+RUN apt update -y
+RUN apt upgrade -y
+RUN apt install -y \
+    xcb libgl1-mesa-glx libglib2.0-0 libsm6 libxext6
+
+RUN mkdir /mvt-annotator
+WORKDIR /mvt-annotator
+COPY . .
+
+# install sam2 and requirements
+# RUN git clone https://github.com/facebookresearch/segment-anything-2.git
+WORKDIR /mvt-annotator/segment-anything-2/
+RUN pip install -e .
+
+WORKDIR /mvt-annotator/
+RUN pip install \
+    opencv-python \
+    ultralytics \
+    pycocotools \
+    natsort
+
+# docker build -t mvt -f Dockerfile.wsl .
