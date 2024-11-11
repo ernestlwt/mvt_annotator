@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Set, Tuple
 import cv2
 import numpy as np
 import torch
+from natsort import natsorted
 from pycocotools import mask as coco_mask
 from sam2.build_sam import build_sam2_video_predictor
 from tqdm import tqdm
@@ -401,9 +402,11 @@ class SingleVideoAnnotatorModel:
 
             self.notify_observers(frame_id=frame_id, changed="detections")
 
-    def initialize_SAM_tracking(self, sam_batchsize: int = 100):
-        sam2_checkpoint = "segment-anything-2/checkpoints/sam2_hiera_base_plus.pt"
-        model_cfg = "sam2_hiera_b+.yaml"
+    def initialize_SAM_tracking(self, sam_batchsize: int = 1):
+        # sam2_checkpoint = "segment-anything-2/checkpoints/sam2_hiera_base_plus.pt"
+        sam2_checkpoint = "segment-anything-2/checkpoints/sam2_hiera_tiny.pt"
+        # model_cfg = "sam2_hiera_b+.yaml"
+        model_cfg = "sam2_hiera_t.yaml"
         predictor = build_sam2_video_predictor(
             model_cfg, sam2_checkpoint, device="cuda:0"
         )
@@ -1216,8 +1219,10 @@ class SingleVideoAnnotatorController:
 
 if __name__ == "__main__":
 
-    rgb_frames_path = "/home/inf/mvt_annotator/demo/frames"
-    annotator_states_path = "/home/inf/mvt_annotator/demo/states"  # save the states here, including all tracking, detections, masks, etc.
+    # rgb_frames_path = "/home/inf/mvt_annotator/demo/frames"
+    rgb_frames_path = "/data/people_walking"
+    # annotator_states_path = "/home/inf/mvt_annotator/demo/states"  # save the states here, including all tracking, detections, masks, etc.
+    annotator_states_path = "/data/states"  # save the states here, including all tracking, detections, masks, etc.
 
     os.makedirs(annotator_states_path, exist_ok=True)
 
