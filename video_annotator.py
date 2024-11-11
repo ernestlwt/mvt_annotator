@@ -1129,7 +1129,7 @@ class SingleVideoAnnotatorController:
                 ax.cla()  # Clear each subplot
 
             # display the tracking 1
-            self._display_tracking_on_axs(all_trackings[tracking_id_1], axs[0, :])
+            self._display_tracking_on_axs(all_trackings[tracking_id_1], axs[0, :], is_target=True)
 
             for i, candidate in enumerate(candidates):
                 self._display_tracking_on_axs(
@@ -1171,12 +1171,12 @@ class SingleVideoAnnotatorController:
 
             # remove all candidates with tracking_id_2
             impossible_merges = {x for x in possible_merges if tracking_id_2 in x}
-            possible_merges = possible_merges - impossible_merges
+            possible_merges: Set[Tuple[int]] = possible_merges - impossible_merges
 
         plt.close()
         self.model.save_state()
 
-    def _display_tracking_on_axs(self, tracking, axs):
+    def _display_tracking_on_axs(self, tracking, axs, is_target=False):
 
         num_axs = len(axs)
         available_frames = list(tracking.masks.keys())
@@ -1215,9 +1215,15 @@ class SingleVideoAnnotatorController:
             ax.imshow(frame)
 
             # disable the ticks
-            ax.axis("off")
+            if i != 0:
+                ax.axis("off")
 
             ax.set_title(f"Frame {frame_id}")
+
+        if is_target:
+            axs[0].set_ylabel(f"Target: {tracking.tracking_id}")
+        else:
+            axs[0].set_ylabel(f"Candidate : {tracking.tracking_id}")
 
 
 if __name__ == "__main__":
