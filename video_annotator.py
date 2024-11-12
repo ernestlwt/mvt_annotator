@@ -9,7 +9,6 @@ from typing import Dict, List, Optional, Set, Tuple
 import cv2
 import numpy as np
 import torch
-from natsort import natsorted
 from pycocotools import mask as coco_mask
 from sam2.build_sam import build_sam2_video_predictor
 from tqdm import tqdm

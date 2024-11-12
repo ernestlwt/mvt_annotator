@@ -18,7 +18,6 @@ WORKDIR /mvt-annotator/
 RUN pip install \
     opencv-python \
     ultralytics \
-    pycocotools \
-    natsort
+    pycocotools 
 
 # docker build -t mvt -f Dockerfile.wsl .
