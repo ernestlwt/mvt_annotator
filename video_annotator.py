@@ -211,7 +211,7 @@ class ImageFolderSource(VideoSource):
         # Apply sorting rule
         # self.image_paths.sort(key=sorting_rule if sorting_rule else lambda x: x)
 
-        self.image_paths = natsorted(self.image_paths)
+        self.image_paths = sorted(self.image_paths, key=sorting_rule)
 
         self.frame_count = len(self.image_paths)
 
@@ -1058,8 +1058,11 @@ class SingleVideoAnnotatorController:
                     ax.imshow(frame)
 
                     ax.set_title(
-                        f"Frame {frame_id} | Click on 2 frames containint seg point | key binding: 'n' to skip the current segmentation, 'd' to delete current tracking"
+                        f"Frame {frame_id}"
                     )
+
+                    #set master title
+                    fig.suptitle(f"Click on 2 frames containint seg point | key binding: 'n' to skip the current segmentation, 'd' to delete current tracking")
 
                 plt.show(block=False)
                 click_handler.wait_for_clicks()
@@ -1129,12 +1132,15 @@ class SingleVideoAnnotatorController:
                 ax.cla()  # Clear each subplot
 
             # display the tracking 1
-            self._display_tracking_on_axs(all_trackings[tracking_id_1], axs[0, :])
+            self._display_tracking_on_axs(all_trackings[tracking_id_1], axs[0, :], is_target=True)
 
             for i, candidate in enumerate(candidates):
                 self._display_tracking_on_axs(
                     all_trackings[candidate[1]], axs[i + 1, :]
                 )
+
+            #set master title
+            fig.suptitle(f"Click on any column on the other rows that you would like to merge with the first row | key binding: 'n' to assert no merge (all candidates are different from the first one)")
 
             plt.show(block=False)
             click_handler.wait_for_clicks()
@@ -1168,12 +1174,12 @@ class SingleVideoAnnotatorController:
 
             # remove all candidates with tracking_id_2
             impossible_merges = {x for x in possible_merges if tracking_id_2 in x}
-            possible_merges = possible_merges - impossible_merges
+            possible_merges: Set[Tuple[int]] = possible_merges - impossible_merges
 
         plt.close()
         self.model.save_state()
 
-    def _display_tracking_on_axs(self, tracking, axs):
+    def _display_tracking_on_axs(self, tracking, axs, is_target=False):
 
         num_axs = len(axs)
         available_frames = list(tracking.masks.keys())
@@ -1212,9 +1218,15 @@ class SingleVideoAnnotatorController:
             ax.imshow(frame)
 
             # disable the ticks
-            ax.axis("off")
+            if i != 0:
+                ax.axis("off")
 
             ax.set_title(f"Frame {frame_id}")
+
+        if is_target:
+            axs[0].set_ylabel(f"Target: {tracking.tracking_id}")
+        else:
+            axs[0].set_ylabel(f"Candidate : {tracking.tracking_id}")
 
 
 if __name__ == "__main__":
